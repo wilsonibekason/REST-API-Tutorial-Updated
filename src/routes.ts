@@ -4,6 +4,7 @@ import {
   getProductHandler,
   updateProductHandler,
   deleteProductHandler,
+  getAllProductHandler,
 } from "./controller/product.controller";
 import {
   createUserSessionHandler,
@@ -12,15 +13,24 @@ import {
 } from "./controller/session.controller";
 import { createUserHandler } from "./controller/user.controller";
 import requireUser from "./middleware/requireUser";
-import validateResource from "./middleware/validateResource";
+import validateResource, { validateV2 } from "./middleware/validateResource";
 import {
   createProductSchema,
   deleteProductSchema,
+  getAllProductsSchema,
   getProductSchema,
   updateProductSchema,
 } from "./schema/product.schema";
 import { createSessionSchema } from "./schema/session.schema";
-import { createUserSchema } from "./schema/user.schema";
+import { findAnonProducts } from "./service/product.service";
+import { loginUserSchema, createUserSchema } from "./schema/user.schema";
+import { sign } from "jsonwebtoken";
+import { validatePassword } from "./service/user.service";
+import { signJwt } from "./utils/jwt.utils";
+
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "gDq+dcQYo/iBT5vixNnjN+q7LHqxMHenxmXiOzp+2VwM8St6K6aXOFrcGEebpPlFkqcAf1b3Q5rmmjFb";
 
 function routes(app: Express) {
   /**
@@ -35,6 +45,58 @@ function routes(app: Express) {
    *         description: App is up and running
    */
   app.get("/healthcheck", (req: Request, res: Response) => res.sendStatus(200));
+
+  /**
+   * @openapi
+   * '/api/users/login':
+   *  post:
+   *     tags:
+   *     - User
+   *     summary: Login a user
+   *     requestBody:
+   *      required: true
+   *      content:
+   *        application/json:
+   *           schema:
+   *              $ref: '#/components/schemas/LoginUserInput'
+   *     responses:
+   *      200:
+   *        description: Login successful
+   *        content:
+   *          application/json:
+   *            schema:
+   *              type: object
+   *              properties:
+   *                user:
+   *                  type: object
+   *                  $ref: '#/components/schemas/User'
+   *                token:
+   *                  type: string
+   *      401:
+   *        description: Unauthorized
+   */
+  app.post(
+    "/api/users/login",
+    validateResource(loginUserSchema),
+    async (req: Request, res: Response) => {
+      const { email, password } = req.body;
+
+      const user = await validatePassword({ email, password });
+
+      if (!user) {
+        return res.status(401).send("Invalid email or password");
+      }
+
+      // Generate JWT token
+      // const token = sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
+      // Generate JWT token
+      const token = signJwt({ id: user._id }, "accessTokenPrivateKey", {
+        expiresIn: "1h",
+      });
+
+      return res.send({ user, token });
+    }
+  );
 
   /**
    * @openapi
@@ -155,6 +217,133 @@ function routes(app: Express) {
     [requireUser, validateResource(createProductSchema)],
     createProductHandler
   );
+
+  /**
+   * @openapi
+   * '/api/products/all':
+   *  get:
+   *     tags:
+   *     - Products
+   *     summary: Retrieve all products
+   *     parameters:
+   *     - in: query
+   *       name: limit
+   *       schema:
+   *         type: integer
+   *       description: Number of products to retrieve per page
+   *     - in: query
+   *       name: page
+   *       schema:
+   *         type: integer
+   *       description: Page number
+   *     responses:
+   *       200:
+   *         description: Products retrieved
+   *         content:
+   *          application/json:
+   *           schema:
+   *              type: array
+   *              items:
+   *                $ref: '#/components/schema/productResponse'
+   *           example:
+   *             [
+   *               {
+   *                 "user": "642a0de05f16e6dad68efdad",
+   *                 "title": "Canon EOS 1500D DSLR Camera with 18-55mm Lens",
+   *                 "description": "Designed for first-time DSLR owners who want impressive results straight out of the box, capture those magic moments no matter your level with the EOS 1500D. With easy to use automatic shooting modes, large 24.1 MP sensor, Canon Camera Connect app integration and built-in feature guide, EOS 1500D is always ready to go.",
+   *                 "price": 879.99,
+   *                 "image": "https://i.imgur.com/QlRphfQ.jpg",
+   *                 "_id": "642a1cfcc1bec76d8a2e7ac2",
+   *                 "productId": "product_xxqm8z3eho",
+   *                 "createdAt": "2023-04-03T00:25:32.189Z",
+   *                 "updatedAt": "2023-04-03T00:25:32.189Z",
+   *                 "__v": 0
+   *               },
+   *               {
+   *                 "user": "642a0de05f16e6dad68efdad",
+   *                 "title": "Nikon D5600 DSLR Camera with 18-55mm Lens",
+   *                 "description": "Take stunning photos and videos with the Nikon D5600 DSLR camera. Featuring a 24.2MP sensor, 1080p Full HD video recording, and built-in Wi-Fi for easy sharing.",
+   *                 "price": 799.99,
+   *                 "image": "https://i.imgur.com/RGphfQ.jpg",
+   *                 "_id": "642a1cfcc1bec76d8a2e7ac3",
+   *                 "productId": "product_xxqm8z3eh1",
+   *                 "createdAt": "2023-04-03T00:25:32.189Z",
+   *                 "updatedAt": "2023-04-03T00:25:32.189Z",
+   *                 "__v": 0
+   *               }
+   *             ]
+   *       404:
+   *         description: No products found
+   */
+  app.get(
+    "/api/products/all",
+    validateV2(getAllProductsSchema),
+    getAllProductHandler
+  );
+
+  /**
+   * @openapi
+   * '/api/products/every':
+   *  get:
+   *     tags:
+   *     - Products
+   *     summary: Retrieve all products
+   *     responses:
+   *       200:
+   *         description: Products retrieved
+   *         content:
+   *          application/json:
+   *           schema:
+   *              type: array
+   *              items:
+   *                $ref: '#/components/schema/productResponse'
+   *           example:
+   *             [
+   *               {
+   *                 "user": "642a0de05f16e6dad68efdad",
+   *                 "title": "Canon EOS 1500D DSLR Camera with 18-55mm Lens",
+   *                 "description": "Designed for first-time DSLR owners who want impressive results...",
+   *                 "price": 879.99,
+   *                 "image": "https://i.imgur.com/QlRphfQ.jpg",
+   *                 "_id": "642a1cfcc1bec76d8a2e7ac2",
+   *                 "productId": "product_xxqm8z3eho",
+   *                 "createdAt": "2023-04-03T00:25:32.189Z",
+   *                 "updatedAt": "2023-04-03T00:25:32.189Z",
+   *                 "__v": 0
+   *               },
+   *               {
+   *                 "user": "642a0de05f16e6dad68efdad",
+   *                 "title": "Nikon D5600 DSLR Camera with 18-55mm Lens",
+   *                 "description": "Take stunning photos and videos with the Nikon D5600 DSLR camera...",
+   *                 "price": 799.99,
+   *                 "image": "https://i.imgur.com/RGphfQ.jpg",
+   *                 "_id": "642a1cfcc1bec76d8a2e7ac3",
+   *                 "productId": "product_xxqm8z3eh1",
+   *                 "createdAt": "2023-04-03T00:25:32.189Z",
+   *                 "updatedAt": "2023-04-03T00:25:32.189Z",
+   *                 "__v": 0
+   *               }
+   *             ]
+   *       404:
+   *         description: No products found
+   */
+  app.get("/api/products/every", getAllProductHandler);
+
+  async function getAllProductHandler(req: Request, res: Response) {
+    try {
+      const products = await findAnonProducts({}); // Simply fetch all products without limit or skip
+
+      if (!products.length) {
+        return res.status(404).send("No products found");
+      }
+
+      return res.send(products);
+    } catch (error) {
+      return res
+        .status(500)
+        .send("An error occurred while retrieving products");
+    }
+  }
 
   /**
    * @openapi

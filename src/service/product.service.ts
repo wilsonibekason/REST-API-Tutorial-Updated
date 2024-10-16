@@ -41,6 +41,56 @@ export async function findProduct(
   }
 }
 
+export async function findProducts(
+  query: FilterQuery<ProductDocument>,
+  options: {
+    limit?: number;
+    skip?: number;
+    lean?: boolean;
+  } = {}
+) {
+  const { limit = 10, skip = 0, lean = true } = options;
+  const metricsLabels = {
+    operation: "findProducts",
+  };
+
+  const timer = databaseResponseTimeHistogram.startTimer();
+  try {
+    const result = await ProductModel.find(query, {}, { lean })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+    timer({ ...metricsLabels, success: "true" });
+    return result;
+  } catch (e) {
+    timer({ ...metricsLabels, success: "false" });
+
+    throw e;
+  }
+}
+
+export async function findAnonProducts(
+  query: FilterQuery<ProductDocument>,
+  options: {
+    lean?: boolean; // Retaining the lean option for performance
+  } = {}
+) {
+  const { lean = true } = options; // Default lean to true
+  const metricsLabels = {
+    operation: "findProducts",
+  };
+
+  const timer = databaseResponseTimeHistogram.startTimer();
+  try {
+    const result = await ProductModel.find(query, {}, { lean }).exec(); // Fetch all products matching the query
+    timer({ ...metricsLabels, success: "true" });
+    return result;
+  } catch (e) {
+    timer({ ...metricsLabels, success: "false" });
+    throw e;
+  }
+}
+
 export async function findAndUpdateProduct(
   query: FilterQuery<ProductDocument>,
   update: UpdateQuery<ProductDocument>,

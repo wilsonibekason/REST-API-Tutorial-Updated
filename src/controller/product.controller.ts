@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
   CreateProductInput,
+  GetAllProductsInput,
   UpdateProductInput,
 } from "../schema/product.schema";
 import {
@@ -8,6 +9,7 @@ import {
   deleteProduct,
   findAndUpdateProduct,
   findProduct,
+  findProducts,
 } from "../service/product.service";
 
 export async function createProductHandler(
@@ -15,6 +17,7 @@ export async function createProductHandler(
   res: Response
 ) {
   const userId = res.locals.user._id;
+  console.log("USER", userId);
 
   const body = req.body;
 
@@ -61,6 +64,35 @@ export async function getProductHandler(
   }
 
   return res.send(product);
+}
+
+// export async function getAllProductHandler(
+//   req: Request<GetAllProductsInput>,
+//   res: Response
+// ) {
+//   const limit = parseInt(req.query.limit as string) || 10; // Default limit to 10 products per page
+//   const page = parseInt(req.query.page as string) || 1; // Default page to 1
+//   const skip = (page - 1) * limit;
+
+//   // const products = await findProduct({}, { skip, limit }); // Retrieve products with pagination
+//   const products = await findProducts({}, { limit: 10, skip });
+
+//   return res.send(products);
+// }
+
+export async function getAllProductHandler(
+  // req: Request<GetAllProductsInput['params'], any, any, GetAllProductsInput['query']>,
+  req: Request<{}, any, any, GetAllProductsInput["query"]>,
+  res: Response
+) {
+  const limit = parseInt(req.query.limit as string) || 10; // Default limit to 10 products per page
+  const page = parseInt(req.query.page as string) || 1; // Default page to 1
+  const skip = (page - 1) * limit;
+
+  // Fetch products with pagination
+  const products = await findProducts({}, { limit, skip });
+
+  return res.send(products);
 }
 
 export async function deleteProductHandler(

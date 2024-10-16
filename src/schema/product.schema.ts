@@ -1,4 +1,5 @@
-import { object, number, string, TypeOf } from "zod";
+import { object, number, string, TypeOf, optional } from "zod";
+import { z } from "zod";
 
 /**
  * @openapi
@@ -75,6 +76,27 @@ const params = {
   }),
 };
 
+const query = z.object({
+  limit: z
+    .string()
+    .optional()
+    .refine((val) => !isNaN(Number(val)), {
+      message: "Limit must be an integer",
+    })
+    .transform((val) => (val ? Number(val) : undefined)),
+  page: z
+    .string()
+    .optional()
+    .refine((val) => !isNaN(Number(val)), {
+      message: "Page must be an integer",
+    })
+    .transform((val) => (val ? Number(val) : undefined)),
+});
+
+// export const getAllProductsSchema = object({
+//   ...query,
+// });
+
 export const createProductSchema = object({
   ...payload,
 });
@@ -92,7 +114,33 @@ export const getProductSchema = object({
   ...params,
 });
 
+// export const getAllProductsSchema = z.object({
+//   query: z.object({
+//     limit: z.string().optional(),
+//     page: z.string().optional(),
+//   }),
+// });
+
+export const getAllProductsSchema = z.object({
+  query: z.object({
+    limit: z
+      .string()
+      .optional()
+      .refine((val) => !val || /^\d+$/.test(val), {
+        message: "Limit must be a number",
+      }),
+    page: z
+      .string()
+      .optional()
+      .refine((val) => !val || /^\d+$/.test(val), {
+        message: "Page must be a number",
+      }),
+  }),
+});
+
 export type CreateProductInput = TypeOf<typeof createProductSchema>;
 export type UpdateProductInput = TypeOf<typeof updateProductSchema>;
 export type ReadProductInput = TypeOf<typeof getProductSchema>;
 export type DeleteProductInput = TypeOf<typeof deleteProductSchema>;
+// export type GetAllProductsInput = TypeOf<typeof getAllProductsSchema>;
+export type GetAllProductsInput = z.infer<typeof getAllProductsSchema>;

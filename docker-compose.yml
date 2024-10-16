@@ -6,7 +6,7 @@ services:
     environment:
       - NODE_ENV=production
     build:
-        context: ./ 
+      context: ./ 
 
   caddy:
     image: caddy/caddy:2.2.1-alpine
@@ -16,10 +16,10 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-    - $PWD/Caddyfile:/etc/caddy/Caddyfile
-    - $PWD/site:/srv
-    - caddy_data:/data
-    - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile  # Use relative path to Caddyfile
+      - ./site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
 
 volumes:
   caddy_data:

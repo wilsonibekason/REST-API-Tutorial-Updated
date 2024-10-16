@@ -8,45 +8,51 @@ Note 2: Make sure you add .env to your .gitignore before pushing any changes to 
 
 #### Base64 encode the keys: https://www.base64encode.org/
 
-
-
 ## Common issues
-* I'm getting a JWT malformed error: https://youtu.be/FzKrfwplips
-* Managing environment variables: https://youtu.be/gfyQzeBlLTI
+
+- I'm getting a JWT malformed error: https://youtu.be/FzKrfwplips
+- Managing environment variables: https://youtu.be/gfyQzeBlLTI
 
 ## Who is this tutorial for?
-* Junior to mid-level developers
-* Anyone interested in building REST APIs with TypeScript
+
+- Junior to mid-level developers
+- Anyone interested in building REST APIs with TypeScript
 
 ## What you will need
-* A running instance of MongoDB
-* Postman
-* An IDE or text editor (VS Code)
-* A web browser
-* A package manager such as NPM or Yarn
-* Node.js installed
+
+- A running instance of MongoDB
+- Postman
+- An IDE or text editor (VS Code)
+- A web browser
+- A package manager such as NPM or Yarn
+- Node.js installed
 
 ## What next?
-* Testing the API with Jest
-* Build a React.js user interface
-* Add Prometheus metrics to the API
-* Deploy the API with Caddy & Docker
-* Add Google OAuth
+
+- Testing the API with Jest
+- Build a React.js user interface
+- Add Prometheus metrics to the API
+- Deploy the API with Caddy & Docker
+- Add Google OAuth
 
 ## Concepts
-* REST API principals
-    * CRUD
-    * HTTP methods
-* JWT & refresh tokens
-* Request validation
+
+- REST API principals
+  - CRUD
+  - HTTP methods
+- JWT & refresh tokens
+- Request validation
+
 ## Technologies
-* Node.js
-* MongoDB with Mongoose
-* TypeScript
-* Express.js & Express.js middleware
-* Zod validation
+
+- Node.js
+- MongoDB with Mongoose
+- TypeScript
+- Express.js & Express.js middleware
+- Zod validation
 
 ## Video structure
+
 1. What are we going to build (Postman demo)
 2. Code walk-through
 3. Bootstrap application
@@ -70,26 +76,27 @@ Note 2: Make sure you add .env to your .gitignore before pushing any changes to 
    4. Update product
    5. Delete product
 
-
 ## Data flow
+
 ![](./diagrams/data-flow.png)
 
-
 ## Access & refresh token flow
-![](./diagrams/refresh-token-flow.png)
 
+![](./diagrams/refresh-token-flow.png)
 
 # Deployment
 
 ## What will we use
-* Docker (image)
-* docker-compose (container)
-* Caddy - Web server
-* DigitalOcean
+
+- Docker (image)
+- docker-compose (container)
+- Caddy - Web server
+- DigitalOcean
 
 Note: You will need Docker installed locally if you want to test your Docker configutation
 
 ## Let's keep in touch
+
 - [Subscribe on YouTube](https://www.youtube.com/TomDoesTech)
 - [Discord](https://discord.gg/4ae2Esm6P7)
 - [Twitter](https://twitter.com/tomdoes_tech)
