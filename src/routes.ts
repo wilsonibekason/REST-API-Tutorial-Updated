@@ -18,6 +18,7 @@ import {
   verifyEmailHandler,
   changePasswordHandler,
   updateProfileHandler,
+  logoutHandler,
 } from "./controller/user.controller";
 import requireUser from "./middleware/requireUser";
 import validateResource, { validateV2 } from "./middleware/validateResource";
@@ -141,6 +142,24 @@ function routes(app: Express) {
 
   /**
    * @openapi
+   * '/api/logout':
+   *  post:
+   *     tags:
+   *     - User
+   *     summary: Log out the user and blacklist the token
+   *     responses:
+   *      200:
+   *        description: Successfully logged out
+   *      400:
+   *        description: No token provided
+   *      401:
+   *        description: Token is invalid or already blacklisted
+   *      500:
+   *        description: An error occurred during logout
+   */
+
+  /**
+   * @openapi
    * '/api/forgot-password':
    *  post:
    *     tags:
@@ -251,6 +270,7 @@ function routes(app: Express) {
    */
 
   app.post("/api/users", validateResource(createUserSchema), createUserHandler);
+  app.post("/api/logout", logoutHandler);
   app.post(
     "/api/forgot-password",
     validateResource(forgotPasswordSchema),

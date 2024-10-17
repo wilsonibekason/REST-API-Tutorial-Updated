@@ -2,6 +2,7 @@ import { get } from "lodash";
 import { Request, Response, NextFunction } from "express";
 import { verifyJwt } from "../utils/jwt.utils";
 import { reIssueAccessToken } from "../service/session.service";
+import { isTokenBlacklisted } from "../utils/tokenBlacklistService";
 
 const deserializeUser = async (
   req: Request,
@@ -12,12 +13,17 @@ const deserializeUser = async (
     /^Bearer\s/,
     ""
   );
+  //  const token = req.headers.authorization?.split(" ")[1]; // Bearer token
 
   const refreshToken = get(req, "headers.x-refresh");
 
   console.log("Received Access Token:", accessToken);
   if (!accessToken) {
     return next();
+  } // Check if the token is blacklisted
+  const isBlacklisted = await isTokenBlacklisted(accessToken);
+  if (isBlacklisted) {
+    return res.status(401).send("Token is blacklisted.");
   }
 
   const { decoded, expired, valid } = verifyJwt(

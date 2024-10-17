@@ -3,8 +3,7 @@ import { omit } from "lodash";
 import UserModel, { UserDocument, UserInput } from "../models/user.model";
 import config from "config";
 
-///
-
+//
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 

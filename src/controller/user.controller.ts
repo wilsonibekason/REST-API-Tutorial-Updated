@@ -18,6 +18,7 @@ import {
 import logger from "../utils/logger";
 import UserModel from "../models/user.model";
 import { sendEmail } from "../utils/email.util";
+import { addToTokenBlacklist } from "../utils/tokenBlacklistService";
 
 export async function createUserHandler(
   req: Request<{}, {}, CreateUserInput["body"]>,
@@ -29,6 +30,22 @@ export async function createUserHandler(
   } catch (e: any) {
     logger.error(e);
     return res.status(409).send(e.message);
+  }
+}
+
+// TODO
+export async function logoutHandler(req: Request, res: Response) {
+  const token = req.headers.authorization?.split(" ")[1]; // Bearer token
+
+  if (!token) {
+    return res.status(400).send("No token provided.");
+  }
+
+  try {
+    await addToTokenBlacklist(token);
+    return res.status(200).send("Successfully logged out.");
+  } catch (e: any) {
+    return res.status(500).send("An error occurred during logout.");
   }
 }
 
@@ -47,7 +64,9 @@ export async function forgotPasswordHandler(
     }
 
     // Generate a reset token (you should implement this function)
-    const token = await user.generatePasswordResetToken();
+    // const token = await user.generatePasswordResetToken();
+    const token = user.passwordResetToken;
+    console.log("Password Reset Token", token);
     await user.save(); // Save the token and token expiry to the user
 
     // Create a reset password link
