@@ -11,7 +11,14 @@ import {
   getUserSessionsHandler,
   deleteSessionHandler,
 } from "./controller/session.controller";
-import { createUserHandler } from "./controller/user.controller";
+import {
+  createUserHandler,
+  forgotPasswordHandler,
+  resetPasswordHandler,
+  verifyEmailHandler,
+  changePasswordHandler,
+  updateProfileHandler,
+} from "./controller/user.controller";
 import requireUser from "./middleware/requireUser";
 import validateResource, { validateV2 } from "./middleware/validateResource";
 import {
@@ -23,7 +30,15 @@ import {
 } from "./schema/product.schema";
 import { createSessionSchema } from "./schema/session.schema";
 import { findAnonProducts } from "./service/product.service";
-import { loginUserSchema, createUserSchema } from "./schema/user.schema";
+import {
+  loginUserSchema,
+  createUserSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+  updateProfileSchema,
+  LoginUserInput,
+} from "./schema/user.schema";
 import { sign } from "jsonwebtoken";
 import { validatePassword } from "./service/user.service";
 import { signJwt } from "./utils/jwt.utils";
@@ -78,7 +93,7 @@ function routes(app: Express) {
   app.post(
     "/api/users/login",
     validateResource(loginUserSchema),
-    async (req: Request, res: Response) => {
+    async (req: Request<{}, {}, LoginUserInput["body"]>, res: Response) => {
       const { email, password } = req.body;
 
       const user = await validatePassword({ email, password });
@@ -123,7 +138,140 @@ function routes(app: Express) {
    *      400:
    *        description: Bad request
    */
+
+  /**
+   * @openapi
+   * '/api/forgot-password':
+   *  post:
+   *     tags:
+   *     - User
+   *     summary: Initiate password reset
+   *     requestBody:
+   *      required: true
+   *      content:
+   *        application/json:
+   *           schema:
+   *              $ref: '#/components/schemas/ForgotPasswordInput'
+   *     responses:
+   *      200:
+   *        description: Password reset email sent
+   *      400:
+   *        description: Bad request
+   *      404:
+   *        description: User not found
+   */
+
+  /**
+   * @openapi
+   * '/api/reset-password':
+   *  put:
+   *     tags:
+   *     - User
+   *     summary: Reset password with token
+   *     requestBody:
+   *      required: true
+   *      content:
+   *        application/json:
+   *           schema:
+   *              $ref: '#/components/schemas/ResetPasswordInput'
+   *     responses:
+   *      200:
+   *        description: Password reset successful
+   *      400:
+   *        description: Bad request
+   *      404:
+   *        description: Invalid or expired token
+   */
+
+  /**
+   * @openapi
+   * '/api/verify-email':
+   *  get:
+   *     tags:
+   *     - User
+   *     summary: Verify email with token
+   *     parameters:
+   *     - name: token
+   *       in: query
+   *       required: true
+   *       description: Email verification token
+   *       schema:
+   *         type: string
+   *     responses:
+   *      200:
+   *        description: Email verification successful
+   *      400:
+   *        description: Invalid or expired token
+   *      404:
+   *        description: User not found
+   */
+
+  /**
+   * @openapi
+   * '/api/change-password':
+   *  put:
+   *     tags:
+   *     - User
+   *     summary: Change password while logged in
+   *     requestBody:
+   *      required: true
+   *      content:
+   *        application/json:
+   *           schema:
+   *              $ref: '#/components/schemas/ChangePasswordInput'
+   *     responses:
+   *      200:
+   *        description: Password changed successfully
+   *      400:
+   *        description: Bad request
+   *      401:
+   *        description: Unauthorized or incorrect current password
+   */
+
+  /**
+   * @openapi
+   * '/api/update-profile':
+   *  put:
+   *     tags:
+   *     - User
+   *     summary: Update user profile
+   *     requestBody:
+   *      required: true
+   *      content:
+   *        application/json:
+   *           schema:
+   *              $ref: '#/components/schemas/UpdateProfileInput'
+   *     responses:
+   *      200:
+   *        description: Profile updated successfully
+   *      400:
+   *        description: Bad request
+   *      404:
+   *        description: User not found
+   */
+
   app.post("/api/users", validateResource(createUserSchema), createUserHandler);
+  app.post(
+    "/api/forgot-password",
+    validateResource(forgotPasswordSchema),
+    forgotPasswordHandler
+  );
+  app.put(
+    "/api/reset-password",
+    validateResource(resetPasswordSchema),
+    resetPasswordHandler
+  );
+  app.get("/api/verify-email", verifyEmailHandler);
+  app.put(
+    "/api/change-password",
+    validateResource(changePasswordSchema),
+    changePasswordHandler
+  );
+  app.put(
+    "/api/update-profile",
+    validateResource(updateProfileSchema),
+    updateProfileHandler
+  );
 
   /**
    * @openapi

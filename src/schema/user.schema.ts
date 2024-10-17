@@ -82,9 +82,56 @@ export const loginUserSchema = object({
   }),
 });
 
+//
+
+// Forgot Password Schema
+export const forgotPasswordSchema = object({
+  body: object({
+    email: string({
+      required_error: "Email is required",
+    }).email("Invalid email format"),
+  }),
+});
+
+// Reset Password Schema
+export const resetPasswordSchema = object({
+  body: object({
+    token: string({ required_error: "Token is required" }),
+    newPassword: string({
+      required_error: "New password is required",
+    }).min(6, "Password should be at least 6 characters"),
+  }),
+});
+
+// Change Password Schema
+export const changePasswordSchema = object({
+  body: object({
+    currentPassword: string({
+      required_error: "Current password is required",
+    }),
+    newPassword: string({
+      required_error: "New password is required",
+    }).min(6, "Password should be at least 6 characters"),
+  }),
+});
+
+// Update Profile Schema
+export const updateProfileSchema = object({
+  body: object({
+    name: string().optional(),
+    email: string().optional(),
+    // Add other fields you want to update
+  }),
+});
+
 export type CreateUserInput = Omit<
   TypeOf<typeof createUserSchema>,
   "body.passwordConfirmation"
 >;
 
 export type LoginUserInput = TypeOf<typeof loginUserSchema>;
+
+export type ForgotPasswordInput = TypeOf<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = TypeOf<typeof resetPasswordSchema>;
+export type ChangePasswordInput = TypeOf<typeof changePasswordSchema>;
+export type UpdateProfileInput = TypeOf<typeof updateProfileSchema>;
