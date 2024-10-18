@@ -24,19 +24,23 @@ export async function validatePassword({
   email: string;
   password: string;
 }) {
-  const user = await UserModel.findOne({ email });
+  try {
+    const user = await UserModel.findOne({ email });
 
-  if (!user) {
-    return false;
+    if (!user) {
+      return null;
+    }
+
+    const isValid = await user.comparePassword(password);
+
+    if (!isValid) return null;
+
+    return omit(user.toJSON(), "password");
+  } catch (error) {
+    console.error(error);
+    return null;
   }
-
-  const isValid = await user.comparePassword(password);
-
-  if (!isValid) return false;
-
-  return omit(user.toJSON(), "password");
 }
-
 export async function findUser(query: FilterQuery<UserDocument>) {
   return UserModel.findOne(query).lean();
 }
@@ -90,28 +94,6 @@ export async function verifyEmail(token: string) {
   await user.save();
 }
 
-// Change password while logged in
-// export async function changePassword(
-//   userId: string,
-//   currentPassword: string,
-//   newPassword: string
-// ) {
-//   const user = await UserModel.findById(userId);
-
-//   if (!user) {
-//     throw new Error("User not found");
-//   }
-
-//   const isValid = await user.comparePassword(currentPassword);
-
-//   if (!isValid) {
-//     throw new Error("Incorrect current password");
-//   }
-
-//   user.password = newPassword;
-//   await user.save();
-// }
-// user.service.ts
 export async function changePassword(
   userId: string,
   currentPassword: string,
@@ -124,6 +106,7 @@ export async function changePassword(
   }
 
   const isValid = await user.comparePassword(currentPassword);
+  console.log("IsValid", isValid);
 
   if (!isValid) {
     return false;

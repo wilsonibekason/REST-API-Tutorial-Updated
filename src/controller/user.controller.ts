@@ -4,6 +4,7 @@ import {
   ChangePasswordInput,
   CreateUserInput,
   ForgotPasswordInput,
+  LoginUserInput,
   ResetPasswordInput,
   UpdateProfileInput,
 } from "../schema/user.schema";
@@ -14,11 +15,13 @@ import {
   verifyEmail,
   changePassword,
   updateProfile,
+  validatePassword,
 } from "../service/user.service";
 import logger from "../utils/logger";
 import UserModel from "../models/user.model";
 import { sendEmail } from "../utils/email.util";
 import { addToTokenBlacklist } from "../utils/tokenBlacklistService";
+import { signJwt } from "../utils/jwt.utils";
 
 export async function createUserHandler(
   req: Request<{}, {}, CreateUserInput["body"]>,
@@ -32,6 +35,37 @@ export async function createUserHandler(
     return res.status(409).send(e.message);
   }
 }
+
+export const SignInHandler = async (
+  req: Request<{}, {}, LoginUserInput["body"]>,
+  res: Response
+) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await validatePassword({ email, password });
+
+    if (!user) {
+      return res.status(401).send({
+        error: "Authentication failed",
+        message: "Invalid email or password",
+      });
+    }
+
+    // Generate JWT token
+    const token = signJwt({ id: user._id }, "accessTokenPrivateKey", {
+      expiresIn: "1h",
+    });
+
+    return res.send({ user, token });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      error: "Internal Server Error",
+      message: "Failed to authenticate user",
+    });
+  }
+};
 
 // TODO
 export async function logoutHandler(req: Request, res: Response) {
@@ -116,12 +150,42 @@ export async function verifyEmailHandler(req: Request, res: Response) {
 }
 
 // Change Password Handler (Logged in)
-export async function changePasswordHandler(
+export async function changePasswordHandlers(
   req: Request<{}, {}, ChangePasswordInput["body"]>,
   res: Response
 ) {
   try {
     const userId = res.locals.user._id; // Extract userId from res.locals
+    const { currentPassword, newPassword } = req.body;
+
+    const isPasswordChanged = await changePassword(
+      userId,
+      currentPassword,
+      newPassword
+    );
+
+    if (!isPasswordChanged) {
+      return res.status(400).send("Current password is incorrect");
+    }
+
+    return res.status(200).send("Password changed successfully");
+  } catch (e: any) {
+    logger.error(e);
+    return res.status(500).send(e.message);
+  }
+}
+
+export async function changePasswordHandler(
+  req: Request<{}, {}, ChangePasswordInput["body"]>,
+  res: Response
+) {
+  try {
+    const user = res.locals.user;
+    if (!user) {
+      return res.status(401).send("Unauthorized: No user logged in");
+    }
+
+    const userId = user._id;
     const { currentPassword, newPassword } = req.body;
 
     const isPasswordChanged = await changePassword(
@@ -147,7 +211,13 @@ export async function updateProfileHandler(
   res: Response
 ) {
   try {
-    const userId = res.locals.user._id; // Extract userId from res.locals
+    const user = res.locals.user;
+    if (!user) {
+      return res.status(401).send("Unauthorized: No user logged in");
+    }
+
+    const userId = user._id;
+    console.log("UserId", userId);
     const updateData = req.body;
 
     const updatedUser = await updateProfile(userId, updateData);

@@ -19,6 +19,7 @@ import {
   changePasswordHandler,
   updateProfileHandler,
   logoutHandler,
+  SignInHandler,
 } from "./controller/user.controller";
 import requireUser from "./middleware/requireUser";
 import validateResource, { validateV2 } from "./middleware/validateResource";
@@ -43,6 +44,7 @@ import {
 import { sign } from "jsonwebtoken";
 import { validatePassword } from "./service/user.service";
 import { signJwt } from "./utils/jwt.utils";
+import authenticate from "./middleware/authenticateUser";
 
 const JWT_SECRET =
   process.env.JWT_SECRET ||
@@ -94,24 +96,7 @@ function routes(app: Express) {
   app.post(
     "/api/users/login",
     validateResource(loginUserSchema),
-    async (req: Request<{}, {}, LoginUserInput["body"]>, res: Response) => {
-      const { email, password } = req.body;
-
-      const user = await validatePassword({ email, password });
-
-      if (!user) {
-        return res.status(401).send("Invalid email or password");
-      }
-
-      // Generate JWT token
-      // const token = sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
-      // Generate JWT token
-      const token = signJwt({ id: user._id }, "accessTokenPrivateKey", {
-        expiresIn: "1h",
-      });
-
-      return res.send({ user, token });
-    }
+    SignInHandler
   );
 
   /**
@@ -284,6 +269,7 @@ function routes(app: Express) {
   app.get("/api/verify-email", verifyEmailHandler);
   app.put(
     "/api/change-password",
+    authenticate,
     validateResource(changePasswordSchema),
     changePasswordHandler
   );
