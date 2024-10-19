@@ -22,7 +22,9 @@ export function signJwt(
   keyName: string, // Change this to a single secret key name (e.g. JWT_SECRET)
   options?: jwt.SignOptions | undefined
 ) {
-  const secretKey = process.env.JWT_SECRET || "your_secret_key"; // Use JWT_SECRET for HS256
+  const secretKey =
+    process.env.JWT_SECRET ||
+    "gDq+dcQYo/iBT5vixNnjN+q7LHqxMHenxmXiOzp+2VwM8St6K6aXOFrcGEebpPlFkqcAf1b3Q5rmmjFb"; // Use JWT_SECRET for HS256
   return jwt.sign(object, secretKey, {
     ...(options && options),
     algorithm: "HS256", // Use HS256
@@ -33,7 +35,9 @@ export function verifyJwt(
   token: string,
   keyName: string // Use the same secret key for verification
 ) {
-  const secretKey = process.env.JWT_SECRET || "your_secret_key"; // Use the same secret
+  const secretKey =
+    process.env.JWT_SECRET ||
+    "gDq+dcQYo/iBT5vixNnjN+q7LHqxMHenxmXiOzp+2VwM8St6K6aXOFrcGEebpPlFkqcAf1b3Q5rmmjFb"; // Use the same secret
   try {
     const decoded = jwt.verify(token, secretKey, { algorithms: ["HS256"] });
     return {

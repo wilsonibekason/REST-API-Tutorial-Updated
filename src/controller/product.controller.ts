@@ -40,7 +40,9 @@ export async function updateProductHandler(
   if (!product) {
     return res.sendStatus(404);
   }
-
+  console.log("Product User ID:", product.user);
+  console.log("Requesting User ID:", userId);
+  // compare product UserId and UserId
   if (String(product.user) !== userId) {
     return res.sendStatus(403);
   }
