@@ -155,7 +155,7 @@ export async function changePasswordHandlers(
   res: Response
 ) {
   try {
-    const userId = res.locals.user._id; // Extract userId from res.locals
+    const userId = res.locals.user.id; // Extract userId from res.locals
     const { currentPassword, newPassword } = req.body;
 
     const isPasswordChanged = await changePassword(

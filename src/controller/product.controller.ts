@@ -16,7 +16,7 @@ export async function createProductHandler(
   req: Request<{}, {}, CreateProductInput["body"]>,
   res: Response
 ) {
-  const userId = res.locals.user._id;
+  const userId = res.locals.user.id;
   console.log("USER", userId);
 
   const body = req.body;
@@ -30,7 +30,7 @@ export async function updateProductHandler(
   req: Request<UpdateProductInput["params"]>,
   res: Response
 ) {
-  const userId = res.locals.user._id;
+  const userId = res.locals.user.id;
 
   const productId = req.params.productId;
   const update = req.body;
@@ -40,8 +40,9 @@ export async function updateProductHandler(
   if (!product) {
     return res.sendStatus(404);
   }
-  console.log("Product User ID:", product.user);
+  console.log("Product Product ID:", product.user);
   console.log("Requesting User ID:", userId);
+  console.log("Requesting Req Prod:", productId);
   // compare product UserId and UserId
   if (String(product.user) !== userId) {
     return res.sendStatus(403);
@@ -101,7 +102,7 @@ export async function deleteProductHandler(
   req: Request<UpdateProductInput["params"]>,
   res: Response
 ) {
-  const userId = res.locals.user._id;
+  const userId = res.locals.user.id;
   const productId = req.params.productId;
 
   const product = await findProduct({ productId });
